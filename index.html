@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080a0f">
+<title>Cerevi Grapher — Video Demos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b0e14'/%3E%3Cpath d='M12 9l12 7-12 7z' fill='%23e8ecf4'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#080a0f;
+    --line:rgba(255,255,255,.08);
+    --ink:#e8ecf4;
+    --muted:#8b96ab;
+    --accent:#6ea8fe;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding:44px 28px 56px;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    align-items:center;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 620px at 50% -12%, #16203a 0%, transparent 62%),
+      var(--bg);
+    font:16px/1.5 "Inter", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:100%;max-width:1520px;margin:0 auto}
+
+  header{display:flex;align-items:center;gap:16px;margin:0 0 26px;padding:0 4px}
+  header h1{
+    margin:0;font-size:14px;font-weight:600;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  }
+  header .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));
+    gap:30px;
+  }
+  .panel{margin:0;display:flex;flex-direction:column}
+
+  /* ---------- video ---------- */
+  .stage{
+    position:relative;
+    aspect-ratio:16/9;
+    background:#000;
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    cursor:pointer;
+    outline:none;
+    box-shadow:0 24px 60px -30px rgba(0,0,0,.95);
+    transition:border-color .25s, box-shadow .25s;
+  }
+  .stage:hover{border-color:rgba(255,255,255,.2)}
+  .stage:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(110,168,254,.3)}
+  .stage.is-playing{cursor:default}
+
+  .stage video{
+    display:block;width:100%;height:100%;
+    object-fit:contain;background:#000;
+    pointer-events:none;            /* the .stage handles every click */
+  }
+
+  .shade{
+    position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(circle at 50% 50%, rgba(0,0,0,.42), rgba(0,0,0,.12) 46%, transparent 72%);
+    transition:opacity .25s;
+  }
+
+  .big-play{
+    position:absolute;inset:0;margin:auto;
+    width:82px;height:82px;padding:0;
+    display:grid;place-items:center;
+    border:0;border-radius:50%;
+    background:rgba(255,255,255,.94);
+    color:#0b0e14;cursor:pointer;
+    box-shadow:0 12px 34px rgba(0,0,0,.5);
+    transition:transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s, background .22s;
+  }
+  .big-play svg{width:30px;height:30px;margin-left:4px}
+  .big-play .icon-replay{display:none;margin-left:0}
+  .stage:hover .big-play{transform:scale(1.06);background:#fff}
+  .stage.is-playing .big-play,
+  .stage.is-playing .shade{opacity:0;pointer-events:none}
+  .stage.is-playing .big-play{transform:scale(.84)}
+  .stage.is-ended .big-play .icon-play{display:none}
+  .stage.is-ended .big-play .icon-replay{display:block}
+
+  /* ---------- meta row ---------- */
+  .meta{
+    display:flex;align-items:center;gap:10px;
+    padding:14px 2px 10px;
+    min-width:0;
+  }
+  .meta .num{
+    flex:none;font-size:11px;letter-spacing:.14em;color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .meta .title{
+    flex:1;min-width:0;font-size:15px;color:#cfd7e6;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .meta .time{
+    flex:none;font-size:12px;color:var(--muted);
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+
+  .ctrl{
+    flex:none;width:28px;height:28px;padding:0;
+    display:grid;place-items:center;
+    border:0;border-radius:7px;background:transparent;
+    color:#aab6ca;cursor:pointer;
+    transition:background .18s,color .18s;
+  }
+  .ctrl:hover{background:rgba(255,255,255,.1);color:#fff}
+  .ctrl svg{width:15px;height:15px;fill:currentColor}
+
+  /* ---------- seek track ---------- */
+  .track{
+    position:relative;height:3px;margin:0 2px;
+    border-radius:99px;background:rgba(255,255,255,.13);
+    cursor:pointer;touch-action:none;
+  }
+  .track::before{content:"";position:absolute;left:0;right:0;top:-9px;bottom:-9px}
+  .track-fill{
+    position:absolute;left:0;top:0;bottom:0;width:0;
+    border-radius:99px;background:var(--accent);
+    pointer-events:none;
+  }
+  .track-fill::after{
+    content:"";position:absolute;right:0;top:50%;
+    width:11px;height:11px;border-radius:50%;background:#fff;
+    transform:translate(50%,-50%) scale(0);
+    transition:transform .16s;pointer-events:none;
+  }
+  .track:hover{background:rgba(255,255,255,.22)}
+  .track:hover .track-fill::after,
+  .track:active .track-fill::after{transform:translate(50%,-50%) scale(1)}
+
+  @media (max-width:640px){
+    body{padding:28px 16px 40px}
+    .grid{gap:22px}
+    .big-play{width:64px;height:64px}
+    .big-play svg{width:24px;height:24px}
+    .meta .title{font-size:14px}
+    .meta .time{font-size:11px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Cerevi Grapher</h1>
+    <span class="rule"></span>
+  </header>
+
+  <div class="grid">
+    <figure class="panel">
+      <div class="stage" tabindex="0" role="group" aria-label="Atlas-aware Labeling — click to play">
+        <video preload="metadata" playsinline webkit-playsinline
+               src="Atlas-aware%20Labeling.mp4"></video>
+        <div class="shade"></div>
+        <button class="big-play" type="button" aria-label="Play Atlas-aware Labeling">
+          <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.29-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
+          <svg class="icon-replay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L6 6l6 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+        </button>
+      </div>
+      <div class="meta">
+        <span class="num">01</span>
+        <span class="title">Atlas-aware Labeling</span>
+        <span class="time">0:00 / 0:00</span>
+        <button class="ctrl ctrl-play" type="button" aria-label="Play or pause">
+          <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.29-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>
+        </button>
+        <button class="ctrl ctrl-fs" type="button" aria-label="Fullscreen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></svg>
+        </button>
+      </div>
+      <div class="track" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="track-fill"></div>
+      </div>
+    </figure>
+
+    <figure class="panel">
+      <div class="stage" tabindex="0" role="group" aria-label="Boundary-based Annotation — click to play">
+        <video preload="metadata" playsinline webkit-playsinline
+               src="boundary-based%20annotation.mp4"></video>
+        <div class="shade"></div>
+        <button class="big-play" type="button" aria-label="Play Boundary-based Annotation">
+          <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.29-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
+          <svg class="icon-replay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L6 6l6 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+        </button>
+      </div>
+      <div class="meta">
+        <span class="num">02</span>
+        <span class="title">Boundary-based Annotation</span>
+        <span class="time">0:00 / 0:00</span>
+        <button class="ctrl ctrl-play" type="button" aria-label="Play or pause">
+          <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.29-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>
+        </button>
+        <button class="ctrl ctrl-fs" type="button" aria-label="Fullscreen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></svg>
+        </button>
+      </div>
+      <div class="track" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="track-fill"></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+<script>
+(function () {
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+  var vids = panels.map(function (p) { return p.querySelector('video'); });
+
+  function fmt(t) {
+    if (!isFinite(t) || t < 0) t = 0;
+    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  panels.forEach(function (panel, i) {
+    var v       = vids[i];
+    var stage   = panel.querySelector('.stage');
+    var bigPlay = panel.querySelector('.big-play');
+    var btnPlay = panel.querySelector('.ctrl-play');
+    var fsBtn   = panel.querySelector('.ctrl-fs');
+    var track   = panel.querySelector('.track');
+    var fill    = panel.querySelector('.track-fill');
+    var time    = panel.querySelector('.time');
+
+    function paint() {
+      var playing = !v.paused && !v.ended;
+      stage.classList.toggle('is-playing', playing);
+      stage.classList.toggle('is-ended', v.ended);
+      btnPlay.querySelector('.icon-play').style.display  = playing ? 'none' : '';
+      btnPlay.querySelector('.icon-pause').style.display = playing ? '' : 'none';
+      btnPlay.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    }
+
+    function toggle() {
+      if (v.paused || v.ended) {
+        if (v.ended) v.currentTime = 0;
+        var p = v.play();
+        if (p && p.catch) p.catch(function () { paint(); });
+      } else {
+        v.pause();
+      }
+    }
+
+    function sync() {
+      var d = v.duration || 0;
+      var pct = d ? Math.min(1, v.currentTime / d) : 0;
+      fill.style.width = (pct * 100) + '%';
+      track.setAttribute('aria-valuenow', Math.round(pct * 100));
+      time.textContent = fmt(v.currentTime) + ' / ' + fmt(d);
+    }
+
+    /* click / tap the video area to play or pause */
+    stage.addEventListener('click', function (e) {
+      if (e.target.closest('.big-play')) return;   /* handled by the button */
+      toggle();
+    });
+    bigPlay.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
+    btnPlay.addEventListener('click', toggle);
+
+    /* seek by clicking / dragging the track */
+    var dragging = false;
+    function seekTo(clientX) {
+      var r = track.getBoundingClientRect();
+      var pct = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+      if (v.duration) v.currentTime = pct * v.duration;
+      sync();
+    }
+    track.addEventListener('pointerdown', function (e) {
+      dragging = true;
+      track.setPointerCapture(e.pointerId);
+      seekTo(e.clientX);
+    });
+    track.addEventListener('pointermove', function (e) { if (dragging) seekTo(e.clientX); });
+    track.addEventListener('pointerup', function () { dragging = false; });
+    track.addEventListener('pointercancel', function () { dragging = false; });
+
+    /* fullscreen */
+    fsBtn.addEventListener('click', function () {
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      if (stage.requestFullscreen) stage.requestFullscreen();
+      else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+    });
+
+    /* keyboard: space/enter/k play-pause, arrows seek, f fullscreen */
+    stage.addEventListener('keydown', function (e) {
+      var k = e.key.toLowerCase();
+      if (e.key === ' ' || e.key === 'Enter' || k === 'k') {
+        e.preventDefault(); toggle();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault(); v.currentTime = Math.min(v.duration || 0, v.currentTime + 2);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault(); v.currentTime = Math.max(0, v.currentTime - 2);
+      } else if (k === 'f') {
+        e.preventDefault(); fsBtn.click();
+      }
+    });
+
+    /* only one video at a time */
+    v.addEventListener('play', function () {
+      vids.forEach(function (o) { if (o !== v && !o.paused) o.pause(); });
+      paint();
+    });
+    v.addEventListener('pause', paint);
+    v.addEventListener('ended', paint);
+    v.addEventListener('loadedmetadata', sync);
+    v.addEventListener('durationchange', sync);
+    v.addEventListener('timeupdate', sync);
+    v.addEventListener('seeked', sync);
+
+    sync();
+    paint();
+  });
+})();
+</script>
+</body>
+</html>
