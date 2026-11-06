@@ -179,7 +179,7 @@
       <div class="meta">
         <span class="num">01</span>
         <span class="title">Atlas-aware Labeling</span>
-        <span class="time">0:00 / 0:00</span>
+        <span class="time" data-duration="22.98">0:00 / 0:22</span>
         <button class="ctrl ctrl-play" type="button" aria-label="Play or pause">
           <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.29-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
           <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>
@@ -207,7 +207,7 @@
       <div class="meta">
         <span class="num">02</span>
         <span class="title">Boundary-based Annotation</span>
-        <span class="time">0:00 / 0:00</span>
+        <span class="time" data-duration="38.42">0:00 / 0:38</span>
         <button class="ctrl ctrl-play" type="button" aria-label="Play or pause">
           <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.54.84l10.29-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14z"/></svg>
           <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>
@@ -264,7 +264,7 @@
     }
 
     function sync() {
-      var d = v.duration || 0;
+      var d = v.duration || parseFloat(time.getAttribute('data-duration')) || 0;
       var pct = d ? Math.min(1, v.currentTime / d) : 0;
       fill.style.width = (pct * 100) + '%';
       track.setAttribute('aria-valuenow', Math.round(pct * 100));
